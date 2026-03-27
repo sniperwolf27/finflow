@@ -1,0 +1,278 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ══════════════════════════════════════════════════════════════
+   DESIGN TOKENS  —  single source of truth for the entire app
+   All color references in components MUST use these variables.
+   Never use hardcoded Tailwind gray-N, white, or black in UI code.
+   ══════════════════════════════════════════════════════════════ */
+
+@layer base {
+  :root {
+    /* Surfaces — light mode (Apple Light) */
+    --background:           220 20% 97%;   /* #F4F5F9 — page canvas */
+    --foreground:           224 40% 8%;    /* #0C0E17 — primary label */
+
+    --card:                 0 0% 100%;     /* #FFFFFF — elevated surface */
+    --card-foreground:      224 40% 8%;
+
+    --secondary:            220 16% 93%;   /* #EAECF2 — grouped bg / inputs */
+    --secondary-foreground: 220 10% 40%;
+
+    --muted:                220 16% 93%;
+    --muted-foreground:     220 10% 50%;   /* secondary label */
+
+    --accent:               220 16% 88%;   /* hover/pressed state */
+    --accent-foreground:    224 40% 8%;
+
+    /* Interactive */
+    --primary:              243 75% 59%;   /* #4f46e5 — unified brand blue-indigo */
+    --primary-foreground:   0 0% 100%;
+
+    --destructive:          4 84% 57%;     /* #F03D30 — Apple Red */
+    --destructive-foreground: 0 0% 100%;
+
+    /* Semantic */
+    --success:              142 64% 38%;   /* #22C55E-ish — Apple Green */
+    --success-foreground:   0 0% 100%;
+
+    --warning:              38 92% 50%;    /* #F59E0B — Apple Orange */
+    --warning-foreground:   0 0% 100%;
+
+    /* Financial semantic — income/expense (nunca usar emerald-* ni red-* directamente) */
+    --income:               142 64% 38%;   /* = success — verde ingresos */
+    --income-foreground:    0 0% 100%;
+    --income-subtle:        142 64% 38% / 0.10; /* fondo suave para badges/icons de ingreso */
+
+    --expense:              4 84% 57%;     /* = destructive — rojo gastos */
+    --expense-foreground:   0 0% 100%;
+    --expense-subtle:       4 84% 57% / 0.10;  /* fondo suave para badges/icons de gasto */
+
+    /* Structure */
+    --border:               220 13% 88%;   /* separator */
+    --input:                220 13% 88%;   /* input border (same as border) */
+    --ring:                 243 75% 59%;   /* focus ring = primary */
+    --radius:               0.875rem;      /* 14px — Apple-style large radius */
+  }
+
+  .dark {
+    /* Surfaces — dark mode (Apple Dark, deep cool blacks) */
+    --background:           240 15% 7%;    /* #0E0E16 — deepest level */
+    --foreground:           213 31% 91%;   /* #E2E8F5 — primary label */
+
+    --card:                 240 14% 11%;   /* #191921 — elevated surface */
+    --card-foreground:      213 31% 91%;
+
+    --secondary:            240 12% 17%;   /* #252530 — grouped/input bg */
+    --secondary-foreground: 215 20% 65%;
+
+    --muted:                240 12% 17%;
+    --muted-foreground:     215 20% 55%;   /* secondary label */
+
+    --accent:               240 13% 22%;   /* #2E2E3C — hover/pressed */
+    --accent-foreground:    213 31% 91%;
+
+    /* Interactive */
+    --primary:              243 75% 68%;   /* lighter indigo for dark bg */
+    --primary-foreground:   0 0% 100%;
+
+    --destructive:          4 72% 55%;     /* slightly muted red */
+    --destructive-foreground: 0 0% 100%;
+
+    /* Semantic */
+    --success:              142 64% 43%;
+    --success-foreground:   0 0% 100%;
+
+    --warning:              38 92% 50%;
+    --warning-foreground:   0 0% 100%;
+
+    /* Financial semantic — dark mode variants */
+    --income:               142 64% 43%;
+    --income-foreground:    0 0% 100%;
+    --income-subtle:        142 64% 43% / 0.12;
+
+    --expense:              4 72% 55%;
+    --expense-foreground:   0 0% 100%;
+    --expense-subtle:       4 72% 55% / 0.12;
+
+    /* Structure */
+    --border:               240 13% 20%;
+    --input:                240 13% 20%;
+    --ring:                 243 75% 68%;
+  }
+
+  /* ── Global resets ───────────────────────────────────────── */
+  *, *::before, *::after {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-size: 15px;
+    line-height: 1.5;
+    transition: background-color 200ms ease, color 200ms ease;
+  }
+
+  /* ── Scrollbar (subtle, Apple-like) ─────────────────────── */
+  ::-webkit-scrollbar        { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track  { background: transparent; }
+  ::-webkit-scrollbar-thumb  { @apply bg-border rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-muted-foreground/40; }
+
+  /* ── Focus ring (Apple-like) ─────────────────────────────── */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   COMPONENT CLASSES  —  all use CSS variables only.
+   ══════════════════════════════════════════════════════════════ */
+
+@layer components {
+
+  /* ── Card ────────────────────────────────────────────────── */
+  .card {
+    @apply bg-card text-card-foreground rounded-xl border border-border;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+    transition: box-shadow 200ms ease, transform 200ms ease;
+  }
+  .card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06);
+    transform: translateY(-1px);
+  }
+
+  /* ── Buttons ─────────────────────────────────────────────── */
+
+  /* Base shared by all buttons */
+  .btn-base {
+    @apply inline-flex items-center justify-center gap-2
+           text-sm font-medium rounded-md
+           transition-all duration-200
+           disabled:opacity-50 disabled:cursor-not-allowed
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1;
+  }
+
+  .btn-primary {
+    @apply btn-base px-4 py-2
+           bg-primary text-primary-foreground
+           hover:opacity-90 active:scale-[0.98];
+  }
+
+  .btn-secondary {
+    @apply btn-base px-4 py-2
+           bg-secondary text-foreground border border-border
+           hover:bg-accent active:scale-[0.98];
+  }
+
+  .btn-ghost {
+    @apply btn-base px-3 py-1.5
+           text-muted-foreground
+           hover:bg-accent hover:text-foreground;
+  }
+
+  .btn-destructive {
+    @apply btn-base px-4 py-2
+           bg-destructive text-destructive-foreground
+           hover:opacity-90 active:scale-[0.98];
+  }
+
+  /* ── Input ───────────────────────────────────────────────── */
+  .input {
+    @apply w-full px-3 py-2 text-sm
+           border border-border rounded-md
+           bg-card text-foreground
+           placeholder:text-muted-foreground/60
+           transition-all duration-150
+           focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* ── Badge ───────────────────────────────────────────────── */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  /* ── Financial amount colors (use these, never hardcode emerald/red) ── */
+  .text-income   { color: hsl(var(--income)); }
+  .text-expense  { color: hsl(var(--expense)); }
+  .bg-income-subtle  { background-color: hsl(var(--income-subtle)); }
+  .bg-expense-subtle { background-color: hsl(var(--expense-subtle)); }
+}
+
+/* ── Dashboard staggered entry animations ───────────────────── */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 400ms ease-out both;
+}
+
+.stagger-1 { animation-delay: 0ms; }
+.stagger-2 { animation-delay: 80ms; }
+.stagger-3 { animation-delay: 160ms; }
+.stagger-4 { animation-delay: 240ms; }
+.stagger-5 { animation-delay: 320ms; }
+
+/* ── Shimmer skeleton ───────────────────────────────────────── */
+
+@keyframes shimmer {
+  from { background-position: -200% center; }
+  to   { background-position:  200% center; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 25%,
+    hsl(var(--muted-foreground) / 0.12) 50%,
+    hsl(var(--muted)) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* ── Float animation (login logo) ───────────────────────────── */
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%      { transform: translateY(-6px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ACCESSIBILITY  —  respect user motion preferences.
+   ══════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

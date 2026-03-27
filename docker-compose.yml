@@ -1,0 +1,33 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      target: development
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - sqlite_data:/app/prisma
+    env_file: .env
+    environment:
+      NODE_ENV: development
+      DATABASE_PROVIDER: sqlite
+      DATABASE_URL: file:/app/prisma/dev.db
+
+  frontend:
+    build:
+      context: ./frontend
+      target: development
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      VITE_API_URL: http://localhost:3001
+
+volumes:
+  sqlite_data:

@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node:*)",
+      "Bash(npm install:*)",
+      "Bash(npx prisma:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm list:*)",
+      "Skill(update-config)",
+      "Bash(mkdir -p ~/.claude/skills)",
+      "Bash(git clone:*)",
+      "Bash(ls ~/.claude/skills/ui-ux-pro-max/*.md)",
+      "Bash(npx vite:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(grep -r \"fixed\\\\|absolute\\\\|backdrop\\\\|overlay\\\\|z-50\\\\|z-\\\\[\" /c/Users/senado/finflow/frontend/src --include=*.tsx)",
+      "Bash(npm run:*)",
+      "Bash(ls C:/Users/senado/finflow/frontend/dist/assets/*.css)",
+      "Bash(sort -t- -k2 -n)",
+      "Bash(tr ';' '\\\\n')",
+      "Bash(ls dist/assets/*.css)",
+      "Bash(xargs cat:*)",
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(pkill -f \"vite\")"
+    ]
+  }
+}

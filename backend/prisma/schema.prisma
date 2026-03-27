@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String        @id @default(cuid())
+  email             String        @unique
+  name              String
+  avatarUrl         String?
+  googleId          String        @unique
+  gmailAccessToken  String?
+  gmailRefreshToken String?
+  tokenExpiresAt    DateTime?
+  lastSyncAt        DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  transactions  Transaction[]
+  categories    Category[]
+  alerts        Alert[]
+  syncLogs      SyncLog[]
+  savingsGoals  SavingsGoal[]
+  budgets       Budget[]
+}
+
+model Category {
+  id           String        @id @default(cuid())
+  name         String
+  color        String        @default("#6366f1")
+  icon         String        @default("tag")
+  isDefault    Boolean       @default(false)
+  userId       String?
+  user         User?         @relation(fields: [userId], references: [id])
+  transactions Transaction[]
+  alerts       Alert[]
+  budgets      Budget[]
+
+  @@unique([name, userId])
+}
+
+model Transaction {
+  id          String            @id @default(cuid())
+  userId      String
+  user        User              @relation(fields: [userId], references: [id])
+
+  amount      Float
+  currency    String            @default("USD")
+  amountUsd   Float?
+  type        TransactionType
+  date        DateTime
+  description String
+  merchant    String?
+  notes       String?
+
+  categoryId  String?
+  category    Category?         @relation(fields: [categoryId], references: [id])
+  aiCategory  String?
+  isConfirmed Boolean           @default(false)
+
+  source         TransactionSource
+  gmailMessageId String?
+  gmailThreadId  String?
+
+  contentHash String
+  isDuplicate Boolean   @default(false)
+  deletedAt   DateTime?
+
+  rawEmailSnippet String?
+  aiConfidence    Float?
+  aiRawResponse   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, contentHash])
+  @@index([userId, date])
+  @@index([userId, categoryId])
+  @@index([gmailMessageId])
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  TRANSFER
+}
+
+enum TransactionSource {
+  GMAIL
+  MANUAL
+  IMPORT
+}
+
+model Alert {
+  id            String       @id @default(cuid())
+  userId        String
+  user          User         @relation(fields: [userId], references: [id])
+  categoryId    String?
+  category      Category?    @relation(fields: [categoryId], references: [id])
+
+  type          AlertType
+  name          String
+  threshold     Float?
+  period        AlertPeriod?
+  isActive      Boolean      @default(true)
+  lastTriggered DateTime?
+  createdAt     DateTime     @default(now())
+}
+
+enum AlertType {
+  BUDGET_LIMIT
+  LARGE_TRANSACTION
+  MONTHLY_SUMMARY
+}
+
+enum AlertPeriod {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+model SyncLog {
+  id            String     @id @default(cuid())
+  userId        String
+  user          User       @relation(fields: [userId], references: [id])
+  startedAt     DateTime   @default(now())
+  completedAt   DateTime?
+  status        SyncStatus
+  emailsScanned Int        @default(0)
+  txCreated     Int        @default(0)
+  txDuplicated  Int        @default(0)
+  errorMessage  String?
+}
+
+enum SyncStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model SavingsGoal {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  name          String
+  emoji         String    @default("🎯")
+  color         String    @default("#6366f1")
+  targetAmount  Float
+  currentAmount Float     @default(0)
+  currency      String    @default("USD")
+  deadline      DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model Budget {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id])
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
+  name       String
+  amount     Float
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@unique([userId, categoryId])
+  @@index([userId])
+}

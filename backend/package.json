@@ -1,0 +1,38 @@
+{
+  "name": "finflow-backend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "ts-node prisma/seed.ts",
+    "db:studio": "prisma studio",
+    "db:reset": "prisma migrate reset --force && npm run db:seed"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.30.0",
+    "@prisma/client": "^5.19.0",
+    "connect-sqlite3": "^0.9.14",
+    "cors": "^2.8.5",
+    "dotenv": "^17.3.1",
+    "express": "^4.21.0",
+    "express-session": "^1.18.0",
+    "googleapis": "^144.0.0",
+    "html-to-text": "^9.0.5",
+    "node-cron": "^3.0.3",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/connect-sqlite3": "^0.9.5",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/express-session": "^1.18.0",
+    "@types/node": "^22.0.0",
+    "@types/node-cron": "^3.0.11",
+    "prisma": "^5.19.0",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.5.0"
+  }
+}
