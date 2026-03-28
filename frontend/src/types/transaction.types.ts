@@ -14,6 +14,7 @@ export interface Transaction {
   id: string
   userId: string
   amount: number
+  originalAmount: number | null
   currency: string
   type: TransactionType
   date: string
@@ -33,11 +34,37 @@ export interface Transaction {
   updatedAt: string
 }
 
+export interface CreateTransactionInput {
+  amount: number
+  originalAmount?: number
+  currency: string
+  type: TransactionType
+  date: string
+  description: string
+  merchant?: string | null
+  notes?: string | null
+  categoryId?: string | null
+}
+
 export interface TransactionListResult {
   total: number
   page: number
   limit: number
   items: Transaction[]
+}
+
+export interface UpdateTransactionInput {
+  id: string
+  amount?: number
+  originalAmount?: number
+  currency?: string
+  type?: TransactionType
+  categoryId?: string
+  date?: string
+  description?: string
+  merchant?: string | null
+  notes?: string | null
+  isConfirmed?: boolean
 }
 
 export interface TransactionFilters {

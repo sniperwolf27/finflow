@@ -13,6 +13,7 @@ import { useToast } from '../context/ToastContext'
 import { useBudgetProgress, useUpsertBudget, useDeleteBudget } from '../hooks/useBudgets'
 import { fmtRound as fmt } from '../lib/currency'
 import { useCategories } from '../hooks/useCategories'
+import { BudgetWizard } from '../components/budget/BudgetWizard'
 import type { BudgetProgress } from '../api/budgets.api'
 
 
@@ -129,19 +130,24 @@ function BudgetCard({
 }
 
 /* ─── Empty state ─── */
-function EmptyState({ onAdd }: { onAdd: () => void }) {
+function EmptyState({ onAdd, onWizard }: { onAdd: () => void; onWizard: () => void }) {
   return (
-    <div className="card p-16 text-center">
+    <div className="card border-dashed border-2 border-primary/20 bg-primary/5 p-8 sm:p-12 text-center relative overflow-hidden group hover:border-primary/40 transition-colors">
       <div className="w-16 h-16 rounded-3xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-        <Wallet size={28} className="text-primary" />
+        <Wallet size={28} className="text-primary group-hover:scale-110 transition-transform duration-300" />
       </div>
-      <h3 className="font-semibold text-foreground mb-2">Definí tus presupuestos</h3>
-      <p className="text-sm text-muted-foreground mb-6 max-w-xs mx-auto">
-        Establecé un límite mensual por categoría y mirá en tiempo real cuánto te queda para gastar.
+      <h3 className="text-lg font-bold text-foreground mb-2">Configura tu presupuesto inteligente</h3>
+      <p className="text-sm text-muted-foreground mb-8 max-w-sm mx-auto">
+        Analizamos tus últimos 3 meses y creamos un presupuesto personalizado basado en tus hábitos y metas de ahorro.
       </p>
-      <button className="btn-primary mx-auto" onClick={onAdd}>
-        <Plus size={14} /> Crear presupuesto
-      </button>
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <button className="btn-primary w-full sm:w-auto px-6 py-2.5 bg-foreground text-background shadow-lg" onClick={onWizard}>
+          ✨ Crear con wizard
+        </button>
+        <button className="btn-secondary w-full sm:w-auto px-6 py-2.5 text-muted-foreground" onClick={onAdd}>
+          + Crear manualmente
+        </button>
+      </div>
     </div>
   )
 }
@@ -208,6 +214,7 @@ export function BudgetPage() {
   const toast = useToast()
 
   const [showForm, setShowForm] = useState(false)
+  const [showWizard, setShowWizard] = useState(false)
   const [editingBudget, setEditingBudget] = useState<BudgetProgress | null>(null)
   const [deletingBudget, setDeletingBudget] = useState<BudgetProgress | null>(null)
   const [form, setForm] = useState(BLANK_FORM)
@@ -265,16 +272,23 @@ export function BudgetPage() {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-foreground">Presupuestos</h1>
           <p className="text-sm text-muted-foreground">
             Límites mensuales por categoría
           </p>
         </div>
-        <button className="btn-primary" onClick={openCreate}>
-          <Plus size={14} /> Nuevo presupuesto
-        </button>
+        <div className="flex items-center gap-2">
+          {budgets.length > 0 && (
+            <button className="btn-secondary" onClick={() => setShowWizard(true)}>
+              ✨ Regenerar
+            </button>
+          )}
+          <button className="btn-primary flex-1 sm:flex-none" onClick={openCreate}>
+            <Plus size={14} /> Manual
+          </button>
+        </div>
       </div>
 
       {/* Month navigator */}
@@ -307,7 +321,7 @@ export function BudgetPage() {
           <Spinner className="h-8 w-8" />
         </div>
       ) : budgets.length === 0 ? (
-        <EmptyState onAdd={openCreate} />
+        <EmptyState onAdd={openCreate} onWizard={() => setShowWizard(true)} />
       ) : (
         <>
           <SummaryStrip budgets={budgets} />
@@ -412,6 +426,9 @@ export function BudgetPage() {
         onConfirm={handleDelete}
         onClose={() => setDeletingBudget(null)}
       />
+
+      {/* ─── Wizard Integration ─── */}
+      <BudgetWizard open={showWizard} onClose={() => setShowWizard(false)} />
     </div>
   )
 }

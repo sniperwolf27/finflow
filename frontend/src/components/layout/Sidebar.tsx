@@ -29,6 +29,7 @@ const navGroups: NavGroup[] = [
     label: 'Finanzas',
     items: [
       { to: '/dashboard',    icon: LayoutDashboard, label: 'Inicio' },
+      { to: '/analytics',    icon: TrendingUp,      label: 'Analytics' },
       { to: '/transactions', icon: ArrowLeftRight,  label: 'Movimientos' },
       { to: '/budget',       icon: Wallet,          label: 'Presupuestos' },
     ],

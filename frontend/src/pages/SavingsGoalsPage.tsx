@@ -13,6 +13,8 @@ import {
   useUpdateSavingsGoal,
   useDeleteSavingsGoal,
 } from '../hooks/useSavingsGoals'
+import { useSettings, useExchangeRates } from '../hooks/useSettings'
+import { GoalSuggestionsPanel } from '../components/goals/GoalSuggestionsPanel'
 import type { SavingsGoal } from '../api/savings-goals.api'
 import { fmtRound as fmt } from '../lib/currency'
 
@@ -175,6 +177,10 @@ const BLANK_FORM = {
 }
 
 export function SavingsGoalsPage() {
+  const { data: settingsData } = useSettings()
+  const { data: rates } = useExchangeRates()
+  const baseCurrency = settingsData?.settings?.baseCurrency || 'DOP'
+
   const { data: goals = [], isLoading } = useSavingsGoals()
   const createMutation = useCreateSavingsGoal()
   const updateMutation = useUpdateSavingsGoal()
@@ -268,8 +274,8 @@ export function SavingsGoalsPage() {
 
   const completed = goals.filter((g) => g.currentAmount >= g.targetAmount)
   const active    = goals.filter((g) => g.currentAmount <  g.targetAmount)
-  const totalSaved  = goals.reduce((s, g) => s + g.currentAmount, 0)
-  const totalTarget = goals.reduce((s, g) => s + g.targetAmount, 0)
+  const totalSaved  = goals.reduce((s, g) => s + (g.currentAmount * (rates?.find(r => r.from === g.currency)?.rate || 1)), 0)
+  const totalTarget = goals.reduce((s, g) => s + (g.targetAmount * (rates?.find(r => r.from === g.currency)?.rate || 1)), 0)
 
   if (isLoading) {
     return (
@@ -298,33 +304,39 @@ export function SavingsGoalsPage() {
 
       {/* Summary banner */}
       {goals.length > 0 && (
-        <div className="card p-4">
-          <div className="grid grid-cols-3 divide-x divide-border">
-            <div className="text-center px-4">
-              <p className="text-xs text-muted-foreground mb-0.5">Total ahorrado</p>
-              <p className="text-lg font-bold text-income">{fmt(totalSaved)}</p>
+        <div className="space-y-1 relative">
+          <p className="text-[11px] text-muted-foreground/60 text-right w-full">Montos en {baseCurrency}</p>
+          <div className="card p-4">
+            <div className="grid grid-cols-3 divide-x divide-border">
+              <div className="text-center px-4">
+                <p className="text-xs text-muted-foreground mb-0.5">Total ahorrado</p>
+                <p className="text-lg font-bold text-income">{fmt(totalSaved, baseCurrency)}</p>
+              </div>
+              <div className="text-center px-4">
+                <p className="text-xs text-muted-foreground mb-0.5">Total objetivo</p>
+                <p className="text-lg font-bold text-foreground">{fmt(totalTarget, baseCurrency)}</p>
+              </div>
+              <div className="text-center px-4">
+                <p className="text-xs text-muted-foreground mb-0.5">Progreso global</p>
+                <p className="text-lg font-bold text-primary">
+                  {totalTarget > 0 ? `${Math.round((totalSaved / totalTarget) * 100)}%` : '—'}
+                </p>
+              </div>
             </div>
-            <div className="text-center px-4">
-              <p className="text-xs text-muted-foreground mb-0.5">Total objetivo</p>
-              <p className="text-lg font-bold text-foreground">{fmt(totalTarget)}</p>
-            </div>
-            <div className="text-center px-4">
-              <p className="text-xs text-muted-foreground mb-0.5">Progreso global</p>
-              <p className="text-lg font-bold text-primary">
-                {totalTarget > 0 ? `${Math.round((totalSaved / totalTarget) * 100)}%` : '—'}
-              </p>
-            </div>
+            {totalTarget > 0 && (
+              <div className="mt-3 h-2 w-full bg-secondary rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-primary to-[hsl(var(--income))] rounded-full transition-all duration-700"
+                  style={{ width: `${Math.min((totalSaved / totalTarget) * 100, 100)}%` }}
+                />
+              </div>
+            )}
           </div>
-          {totalTarget > 0 && (
-            <div className="mt-3 h-2 w-full bg-secondary rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-primary to-[hsl(var(--income))] rounded-full transition-all duration-700"
-                style={{ width: `${Math.min((totalSaved / totalTarget) * 100, 100)}%` }}
-              />
-            </div>
-          )}
         </div>
       )}
+
+      {/* Goal Suggestions Panel */}
+      <GoalSuggestionsPanel />
 
       {/* Empty state */}
       {goals.length === 0 && (

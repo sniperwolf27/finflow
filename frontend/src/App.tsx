@@ -12,6 +12,7 @@ import { AlertsPage } from './pages/AlertsPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { SavingsGoalsPage } from './pages/SavingsGoalsPage'
 import { BudgetPage } from './pages/BudgetPage'
+import { AnalyticsPage } from './pages/AnalyticsPage'
 import { Spinner } from './components/ui/Spinner'
 import { ToastProvider } from './context/ToastContext'
 
@@ -58,6 +59,7 @@ export default function App() {
           }
         >
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/transactions" element={<TransactionsPage />} />
           <Route path="/categories" element={<CategoriesPage />} />
           <Route path="/goals" element={<SavingsGoalsPage />} />

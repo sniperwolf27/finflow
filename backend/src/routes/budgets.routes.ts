@@ -7,9 +7,39 @@ import {
   getBudgetProgress,
 } from '../services/budgets.service'
 
+import {
+  generateBudgetProposal,
+  applyBudgetProposal
+} from '../services/budgetWizard.service'
+
 const router = Router()
 router.use(requireAuth)
 
+// ─── WIZARD ───
+router.get('/wizard/proposal', async (req, res, next) => {
+  try {
+    const proposal = await generateBudgetProposal(req.user!.id)
+    res.json(proposal)
+  } catch (err) {
+    next(err)
+  }
+})
+
+router.post('/wizard/apply', async (req, res, next) => {
+  try {
+    const { categories } = req.body
+    if (!Array.isArray(categories)) {
+       res.status(400).json({ error: 'Body must contain categories array' })
+       return
+    }
+    const result = await applyBudgetProposal(req.user!.id, categories)
+    res.json(result)
+  } catch (err) {
+    next(err)
+  }
+})
+
+// ─── STANDARD ───
 router.get('/', async (req, res) => {
   const budgets = await listBudgets(req.user!.id)
   res.json(budgets)

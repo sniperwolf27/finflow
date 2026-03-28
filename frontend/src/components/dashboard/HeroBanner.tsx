@@ -12,6 +12,7 @@ interface HeroBannerProps {
   savingsRateDelta: number
   formatAmount: (n: number) => string
   isLoading: boolean
+  currency?: string
 }
 
 export function HeroBanner({
@@ -22,6 +23,7 @@ export function HeroBanner({
   savingsRateDelta,
   formatAmount,
   isLoading,
+  currency,
 }: HeroBannerProps) {
   const hour = new Date().getHours()
   const greeting =
@@ -46,9 +48,12 @@ export function HeroBanner({
   return (
     <div className="pb-2">
       {/* Greeting */}
-      <p className="text-subhead text-muted-foreground mb-1">
-        {greeting}{firstName ? `, ${firstName}` : ''}
-      </p>
+      <div className="flex items-baseline justify-between mb-1">
+        <p className="text-subhead text-muted-foreground">
+          {greeting}{firstName ? `, ${firstName}` : ''}
+        </p>
+        {currency && <span className="text-caption text-muted-foreground/60">Montos en {currency}</span>}
+      </div>
 
       {/* Hero number — largest text on the page */}
       <p className="text-display font-bold text-foreground tracking-tight leading-none mb-2">

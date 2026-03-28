@@ -16,6 +16,7 @@
     "@prisma/client": "^5.19.0",
     "connect-sqlite3": "^0.9.14",
     "cors": "^2.8.5",
+    "date-fns": "^4.1.0",
     "dotenv": "^17.3.1",
     "express": "^4.21.0",
     "express-session": "^1.18.0",

@@ -13,6 +13,10 @@ import alertsRoutes from './routes/alerts.routes'
 import dashboardRoutes from './routes/dashboard.routes'
 import savingsGoalsRoutes from './routes/savings-goals.routes'
 import budgetsRoutes from './routes/budgets.routes'
+import analyticsRoutes from './routes/analytics.routes'
+import settingsRoutes from './routes/settings.routes'
+import suggestionsRoutes from './routes/suggestions.routes'
+import projectionsRoutes from './routes/projections.routes'
 import { startSyncJob } from './jobs/email-sync.job'
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -50,6 +54,10 @@ app.use('/api/alerts', alertsRoutes)
 app.use('/api/dashboard', dashboardRoutes)
 app.use('/api/savings-goals', savingsGoalsRoutes)
 app.use('/api/budgets', budgetsRoutes)
+app.use('/api/analytics', analyticsRoutes)
+app.use('/api/settings', settingsRoutes)
+app.use('/api/suggestions', suggestionsRoutes)
+app.use('/api/projections', projectionsRoutes)
 
 app.get('/api/health', (_req, res) => res.json({ ok: true, version: '1.0.0' }))
 

@@ -20,12 +20,16 @@ model User {
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 
+  settings      UserSettings?
   transactions  Transaction[]
   categories    Category[]
   alerts        Alert[]
   syncLogs      SyncLog[]
   savingsGoals  SavingsGoal[]
-  budgets       Budget[]
+  budgets          Budget[]
+  goalSuggestions  GoalSuggestion[]
+  recurringExpenses RecurringExpense[]
+  monthlyPlans     MonthlyPlan[]
 }
 
 model Category {
@@ -37,8 +41,10 @@ model Category {
   userId       String?
   user         User?         @relation(fields: [userId], references: [id])
   transactions Transaction[]
-  alerts       Alert[]
-  budgets      Budget[]
+  alerts          Alert[]
+  budgets           Budget[]
+  goalSuggestions   GoalSuggestion[]
+  recurringExpenses RecurringExpense[]
 
   @@unique([name, userId])
 }
@@ -48,9 +54,10 @@ model Transaction {
   userId      String
   user        User              @relation(fields: [userId], references: [id])
 
-  amount      Float
-  currency    String            @default("USD")
-  amountUsd   Float?
+  amount         Float
+  currency       String            @default("DOP")
+  originalAmount Float?
+  
   type        TransactionType
   date        DateTime
   description String
@@ -172,4 +179,90 @@ model Budget {
 
   @@unique([userId, categoryId])
   @@index([userId])
+}
+
+model UserSettings {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  baseCurrency String   @default("DOP")
+  updatedAt    DateTime @updatedAt
+}
+
+model ExchangeRate {
+  id        String   @id @default(cuid())
+  from      String
+  to        String
+  rate      Float
+  date      DateTime @default(now())
+  source    String   @default("manual")
+
+  @@unique([from, to, date])
+}
+
+model GoalSuggestion {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id])
+
+  type           String    // "REDUCE_CATEGORY" | "BUILD_EMERGENCY_FUND" | "ELIMINATE_SUBSCRIPTION" | "INCREASE_SAVINGS_RATE"
+  title          String    
+  description    String    
+  categoryId     String?   
+  category       Category? @relation(fields: [categoryId], references: [id])
+
+  targetAmount   Float     
+  monthlySaving  Float     
+  yearlySaving   Float     
+  currentSpend   Float?    
+  suggestedSpend Float?    
+  confidence     Float     
+  currency       String    @default("DOP")
+  accepted       Boolean   @default(false)
+  dismissed      Boolean   @default(false)
+  goalId         String?   // Si fue aceptada -> referencia a la meta creada
+
+  createdAt      DateTime  @default(now())
+  expiresAt      DateTime
+
+  @@index([userId])
+}
+
+// -----------------------------------------------------------------------------
+// FEATURE 3: PROYECCIONES Y PLANIFICADOR MENSUAL
+// -----------------------------------------------------------------------------
+
+// Gastos fijos del usuario (recurrentes mes a mes)
+model RecurringExpense {
+  id          String    @id @default(cuid())
+  userId      String
+  name        String
+  amount      Float
+  currency    String    @default("DOP")
+  categoryId  String?
+  frequency   String    @default("monthly") // "monthly" | "biweekly" | "weekly"
+  dayOfMonth  Int?      // día del mes en que cae (ej: 1, 15, 30)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  
+  user        User      @relation(fields: [userId], references: [id])
+  category    Category? @relation(fields: [categoryId], references: [id])
+}
+
+// Plan mensual forward-looking
+model MonthlyPlan {
+  id                  String   @id @default(cuid())
+  userId              String
+  month               String   // "2026-04" formato YYYY-MM
+  expectedIncome      Float
+  incomeSources       Json     // [{ name, amount, currency }]
+  savingsTarget       Float
+  notes               String?
+  status              String   @default("draft") // "draft" | "active" | "completed"
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  user                User     @relation(fields: [userId], references: [id])
+  
+  @@unique([userId, month])
 }

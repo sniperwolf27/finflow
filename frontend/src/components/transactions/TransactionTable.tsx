@@ -9,6 +9,8 @@ import { useDeleteTransaction, useConfirmTransaction } from '../../hooks/useTran
 import { TransactionEditModal } from './TransactionEditModal'
 import { useToast } from '../../context/ToastContext'
 import { ConfirmModal } from '../ui/ConfirmModal'
+import { ArrowLeftRight } from 'lucide-react'
+import { useSettings } from '../../hooks/useSettings'
 
 interface Props {
   transactions: Transaction[]
@@ -37,6 +39,9 @@ export function TransactionTable({ transactions, isLoading, total, page, limit, 
   const deleteMutation  = useDeleteTransaction()
   const confirmMutation = useConfirmTransaction()
   const toast = useToast()
+  
+  const { data: settingsData } = useSettings()
+  const baseCurrency = settingsData?.settings?.baseCurrency || 'DOP'
 
   const totalPages = Math.ceil(total / limit)
 
@@ -121,16 +126,28 @@ export function TransactionTable({ transactions, isLoading, total, page, limit, 
                     )}
                   </td>
                   <td className="px-4 py-3 text-right whitespace-nowrap">
-                    <span className="font-semibold tabular-nums" style={{ color: typeColors[tx.type] }}>
+                    <span className="font-semibold tabular-nums block" style={{ color: typeColors[tx.type] }}>
                       {typeSymbol[tx.type]}
                       {(() => {
                         try {
-                          return new Intl.NumberFormat('es', { style: 'currency', currency: tx.currency }).format(tx.amount)
+                          return new Intl.NumberFormat('es', { style: 'currency', currency: tx.currency }).format(tx.originalAmount ?? tx.amount)
                         } catch {
-                          return `${tx.currency} ${tx.amount.toFixed(2)}`
+                          return `${tx.currency} ${(tx.originalAmount ?? tx.amount).toFixed(2)}`
                         }
                       })()}
                     </span>
+                    {tx.currency !== baseCurrency && (
+                      <div className="text-caption text-muted-foreground mt-0.5 flex items-center justify-end gap-1">
+                        <ArrowLeftRight size={11} className="opacity-60" />
+                        <span>≈ {(() => {
+                          try {
+                            return new Intl.NumberFormat('es', { style: 'currency', currency: baseCurrency }).format(tx.amount)
+                          } catch {
+                            return `${baseCurrency} ${tx.amount.toFixed(2)}`
+                          }
+                        })()}</span>
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

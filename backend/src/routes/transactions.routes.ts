@@ -8,6 +8,7 @@ import {
   confirmTransaction,
   createManualTransaction,
   exportTransactions,
+  bulkUpdateCurrency,
 } from '../services/transaction.service'
 import { parseTransactionFromText } from '../services/claude.service'
 import { prisma } from '../config/prisma'
@@ -104,10 +105,11 @@ router.get('/:id', async (req, res, next) => {
 
 router.post('/', async (req, res, next) => {
   try {
-    const { amount, currency, type, date, description, merchant, notes, categoryId } = req.body
+    const { amount, originalAmount, currency, type, date, description, merchant, notes, categoryId } = req.body
     const tx = await createManualTransaction(req.user!.id, {
       amount: Number(amount),
-      currency: currency || 'USD',
+      originalAmount: originalAmount ? Number(originalAmount) : Number(amount),
+      currency: currency || 'DOP',
       type,
       date: new Date(date),
       description,
@@ -121,11 +123,27 @@ router.post('/', async (req, res, next) => {
   }
 })
 
+router.patch('/bulk-currency', async (req, res, next) => {
+  try {
+    const { transactionIds, currency } = req.body as { transactionIds: string[], currency: string }
+    if (!transactionIds?.length || !currency) {
+      res.status(400).json({ error: 'transactionIds y currency son requeridos' })
+      return
+    }
+    const count = await bulkUpdateCurrency(req.user!.id, transactionIds, currency)
+    res.json({ ok: true, count })
+  } catch (err) {
+    next(err)
+  }
+})
+
 router.patch('/:id', async (req, res, next) => {
   try {
-    const { amount, type, date, description, merchant, notes, categoryId, isConfirmed } = req.body
+    const { amount, originalAmount, currency, type, date, description, merchant, notes, categoryId, isConfirmed } = req.body
     const tx = await updateTransaction(req.params.id, req.user!.id, {
       ...(amount !== undefined && { amount: Number(amount) }),
+      ...(originalAmount !== undefined && { originalAmount: Number(originalAmount) }),
+      ...(currency !== undefined && { currency }),
       ...(type && { type }),
       ...(date && { date: new Date(date) }),
       ...(description !== undefined && { description }),

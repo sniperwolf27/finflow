@@ -2,6 +2,7 @@ import { Prisma, TransactionSource, TransactionType } from '@prisma/client'
 import { prisma } from '../config/prisma'
 import { buildContentHash } from '../utils/hash'
 import { toDateString } from '../utils/date'
+import { convertAmount } from './exchangeRate.service'
 import { ExtractedTransaction, categorizeTransactionsBatch, CATEGORY_NAMES, CategoryName } from './claude.service'
 import { RawEmail } from './gmail.service'
 
@@ -156,6 +157,8 @@ export async function updateTransaction(
   userId: string,
   data: Partial<{
     amount: number
+    originalAmount: number
+    currency: string
     type: TransactionType
     date: Date
     description: string
@@ -191,6 +194,7 @@ export async function createManualTransaction(
   userId: string,
   data: {
     amount: number
+    originalAmount: number
     currency: string
     type: TransactionType
     date: Date
@@ -265,4 +269,34 @@ export async function exportTransactions(filters: Omit<TransactionFilters, 'page
     include: { category: true },
     orderBy: { date: 'desc' },
   })
+}
+
+export async function bulkUpdateCurrency(userId: string, transactionIds: string[], targetCurrency: string) {
+  const transactions = await prisma.transaction.findMany({
+    where: { id: { in: transactionIds }, userId, deletedAt: null },
+  })
+  
+  if (!transactions.length) return 0
+
+  const settings = await prisma.userSettings.findUnique({ where: { userId } })
+  const baseCurrency = settings?.baseCurrency || 'DOP'
+
+  let count = 0
+  for (const tx of transactions) {
+    const originalAmount = tx.originalAmount ?? tx.amount
+    
+    const newAmount = await convertAmount(originalAmount, targetCurrency, baseCurrency, tx.date)
+
+    await prisma.transaction.update({
+      where: { id: tx.id },
+      data: {
+        currency: targetCurrency,
+        originalAmount,
+        amount: newAmount,
+      },
+    })
+    count++
+  }
+
+  return count
 }

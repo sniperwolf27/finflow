@@ -118,6 +118,7 @@ export function DashboardPage() {
           savingsRateDelta={savingsRateDelta}
           formatAmount={fmtAmount}
           isLoading={summaryLoading}
+          currency={currency}
         />
       </div>
 
@@ -133,7 +134,8 @@ export function DashboardPage() {
       </div>
 
       {/* ── Row 3: KPI Cards with deltas ── */}
-      <div className="animate-fade-in-up stagger-3">
+      <div className="animate-fade-in-up stagger-3 space-y-2">
+        <p className="text-[11px] text-muted-foreground/60 tracking-tight text-right w-full block">Montos en {currency}</p>
         <FinancialSummary
           data={summary}
           isLoading={summaryLoading}

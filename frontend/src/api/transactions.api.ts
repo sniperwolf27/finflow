@@ -1,5 +1,5 @@
 import { api } from './client'
-import { Transaction, TransactionFilters, TransactionListResult, TransactionType } from '../types/transaction.types'
+import { Transaction, TransactionFilters, TransactionListResult, TransactionType, CreateTransactionInput } from '../types/transaction.types'
 
 export interface AiParsedTransaction {
   found: boolean
@@ -23,16 +23,7 @@ export const transactionsApi = {
   get: (id: string) =>
     api.get<Transaction>(`/transactions/${id}`).then((r) => r.data),
 
-  create: (data: {
-    amount: number
-    currency: string
-    type: TransactionType
-    date: string
-    description: string
-    merchant?: string
-    notes?: string
-    categoryId?: string
-  }) => api.post<Transaction>('/transactions', data).then((r) => r.data),
+  create: (data: CreateTransactionInput) => api.post<Transaction>('/transactions', data).then((r) => r.data),
 
   update: ({ id, ...data }: Partial<Transaction> & { id: string }) =>
     api.patch<Transaction>(`/transactions/${id}`, data).then((r) => r.data),

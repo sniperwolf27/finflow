@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Search, Filter, Download, Plus, Sparkles, X } from 'lucide-react'
 import { TransactionTable } from '../components/transactions/TransactionTable'
 import { AiAddModal } from '../components/transactions/AiAddModal'
@@ -7,6 +7,7 @@ import { useCategories } from '../hooks/useCategories'
 import { TransactionFilters, TransactionType } from '../types/transaction.types'
 import { transactionsApi } from '../api/transactions.api'
 import { Modal } from '../components/ui/Modal'
+import { useSettings, useExchangeRates } from '../hooks/useSettings'
 
 export function TransactionsPage() {
   const { data: categories } = useCategories()
@@ -16,24 +17,54 @@ export function TransactionsPage() {
   const { data, isLoading, isError } = useTransactions(filters)
   const createMutation = useCreateTransaction()
 
+  const { data: settingsData } = useSettings()
+  const { data: rates } = useExchangeRates()
+  const baseCurrency = settingsData?.settings?.baseCurrency || 'DOP'
+
   const [newTx, setNewTx] = useState({
-    description: '', merchant: '', amount: '', currency: 'USD',
+    description: '', merchant: '', amount: '', currency: 'DOP',
     type: 'EXPENSE' as TransactionType, date: new Date().toISOString().split('T')[0],
     categoryId: '', notes: '',
   })
+
+  useEffect(() => {
+     if (settingsData?.settings?.baseCurrency) {
+         setNewTx(prev => ({ ...prev, currency: settingsData.settings.baseCurrency }))
+     }
+  }, [settingsData?.settings?.baseCurrency])
+
+  const [debouncedAmount, setDebouncedAmount] = useState(newTx.amount)
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedAmount(newTx.amount), 300)
+    return () => clearTimeout(t)
+  }, [newTx.amount])
+
+  const showPreview = newTx.currency !== baseCurrency && debouncedAmount && !isNaN(Number(debouncedAmount))
+  const targetRate = rates?.find(r => r.from === newTx.currency)
+  const isRateAvailable = !!targetRate
+  const previewAmount = targetRate ? Number(debouncedAmount) * targetRate.rate : 0
 
   const hasActiveFilters = !!(filters.search || filters.type || filters.categoryId || filters.dateFrom || filters.dateTo)
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    let finalAmount = Number(newTx.amount)
+    if (newTx.currency !== baseCurrency) {
+       const fallbackRate = rates?.find(r => r.from === newTx.currency)
+       if (fallbackRate) finalAmount = Number(newTx.amount) * fallbackRate.rate
+    }
+
     await createMutation.mutateAsync({
       ...newTx,
-      amount: Number(newTx.amount),
+      originalAmount: Number(newTx.amount),
+      amount: finalAmount,
       categoryId: newTx.categoryId || undefined,
       notes: newTx.notes || undefined,
     })
     setShowCreate(false)
-    setNewTx({ description: '', merchant: '', amount: '', currency: 'USD', type: 'EXPENSE', date: new Date().toISOString().split('T')[0], categoryId: '', notes: '' })
+    setNewTx({ description: '', merchant: '', amount: '', currency: baseCurrency, type: 'EXPENSE', date: new Date().toISOString().split('T')[0], categoryId: '', notes: '' })
   }
 
   return (
@@ -161,14 +192,41 @@ export function TransactionsPage() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">Monto *</label>
-              <input
-                type="number" step="0.01" min="0" required
-                className="input"
-                value={newTx.amount}
-                onChange={(e) => setNewTx((f) => ({ ...f, amount: e.target.value }))}
-                placeholder="0.00"
-              />
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Monto y Moneda *</label>
+              <div className="flex gap-2">
+                <input
+                  type="number" step="0.01" min="0" required
+                  className="input flex-1 min-w-0"
+                  value={newTx.amount}
+                  onChange={(e) => setNewTx((f) => ({ ...f, amount: e.target.value }))}
+                  placeholder="0.00"
+                />
+                <select 
+                  className="input w-[100px] shrink-0 font-medium px-2"
+                  value={newTx.currency}
+                  onChange={(e) => setNewTx((f) => ({ ...f, currency: e.target.value }))}
+                >
+                  <option value="DOP">🇩🇴 DOP</option>
+                  <option value="USD">🇺🇸 USD</option>
+                  <option value="EUR">🇪🇺 EUR</option>
+                  <option value="GBP">🇬🇧 GBP</option>
+                  <option value="CAD">🇨🇦 CAD</option>
+                </select>
+              </div>
+              
+              {showPreview && (
+                 <div className="mt-1.5 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1 duration-300">
+                    {isRateAvailable ? (
+                      <span className="text-xs text-muted-foreground font-medium">
+                         ≈ {new Intl.NumberFormat('es-DO', { style: 'currency', currency: baseCurrency }).format(previewAmount)}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-warning font-medium">
+                         Tasa no disponible
+                      </span>
+                    )}
+                 </div>
+              )}
             </div>
             <div>
               <label className="block text-xs font-medium text-muted-foreground mb-1">Tipo</label>
